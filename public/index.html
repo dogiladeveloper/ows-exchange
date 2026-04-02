@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OWS Exchange — Agent Trading Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: #2a2a3a;
+  --accent: #00ff88;
+  --accent2: #ff3366;
+  --accent3: #3366ff;
+  --text: #e8e8f0;
+  --text2: #8888aa;
+  --font-mono: 'Space Mono', monospace;
+  --font-display: 'Syne', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* Animated grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container { max-width: 1400px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+/* Header */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+  background: rgba(10,10,15,0.95);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 700;
+  animation: pulse-border 2s infinite;
+}
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(0,255,136,0); }
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.logo-text span { color: var(--accent); }
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+  display: inline-block;
+  margin-right: 6px;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.ows-badge {
+  background: rgba(0,255,136,0.1);
+  border: 1px solid rgba(0,255,136,0.3);
+  color: var(--accent);
+  padding: 4px 10px;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* Hero */
+.hero {
+  padding: 60px 0 40px;
+  text-align: center;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6vw, 80px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+  margin-bottom: 16px;
+}
+.hero h1 .green { color: var(--accent); }
+.hero h1 .red { color: var(--accent2); }
+.hero-sub {
+  color: var(--text2);
+  font-size: 13px;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+.wallet-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 12px 20px;
+  margin-bottom: 40px;
+}
+.wallet-label { font-size: 10px; color: var(--text2); letter-spacing: 1px; }
+.wallet-addr { font-size: 12px; color: var(--accent); }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--surface);
+  padding: 24px;
+  text-align: center;
+}
+.stat-label { font-size: 10px; color: var(--text2); letter-spacing: 2px; margin-bottom: 8px; }
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.stat-value.red { color: var(--accent2); }
+.stat-value.blue { color: var(--accent3); }
+.stat-value.white { color: var(--text); }
+
+/* Bot control */
+.bot-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.btn {
+  padding: 14px 32px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border: none;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.btn-start {
+  background: var(--accent);
+  color: var(--bg);
+}
+.btn-start:hover { filter: brightness(1.2); }
+.btn-stop {
+  background: transparent;
+  color: var(--accent2);
+  border: 1px solid var(--accent2);
+}
+.btn-stop:hover { background: rgba(255,51,102,0.1); }
+.btn-scan {
+  background: transparent;
+  color: var(--accent3);
+  border: 1px solid var(--accent3);
+}
+.btn-scan:hover { background: rgba(51,102,255,0.1); }
+.bot-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+/* Main grid */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 1px;
+}
+.panel {
+  background: var(--surface);
+  padding: 24px;
+}
+.panel-full {
+  background: var(--surface);
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+.panel-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text2);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin-left: 16px;
+}
+
+/* Opportunities */
+.opp-list { display: flex; flex-direction: column; gap: 8px; }
+.opp-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 14px;
+  transition: all 0.2s;
+}
+.opp-item:hover { border-color: var(--accent); background: rgba(0,255,136,0.03); }
+.opp-market { font-size: 11px; color: var(--text); margin-bottom: 8px; line-height: 1.4; }
+.opp-meta { display: flex; gap: 16px; font-size: 10px; }
+.opp-edge { color: var(--accent); font-weight: 700; }
+.opp-price { color: var(--text2); }
+.opp-rec {
+  font-size: 9px;
+  letter-spacing: 1px;
+  background: rgba(0,255,136,0.1);
+  color: var(--accent);
+  padding: 2px 8px;
+  margin-top: 8px;
+  display: inline-block;
+}
+
+/* Trades log */
+.trades-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+.trade-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 60px 80px;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  animation: slide-in 0.3s ease;
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.trade-time { color: var(--text2); }
+.trade-market { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trade-pnl-pos { color: var(--accent); font-weight: 700; }
+.trade-pnl-neg { color: var(--accent2); font-weight: 700; }
+.trade-status {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--accent);
+  background: rgba(0,255,136,0.1);
+  padding: 2px 6px;
+  text-align: center;
+}
+
+/* OWS proof */
+.ows-proof {
+  background: var(--surface2);
+  border: 1px solid rgba(0,255,136,0.2);
+  padding: 20px;
+  margin-top: 20px;
+}
+.ows-proof-title { font-size: 10px; letter-spacing: 2px; color: var(--accent); margin-bottom: 12px; }
+.ows-proof-data { font-size: 10px; color: var(--text2); line-height: 1.8; word-break: break-all; }
+.ows-proof-data span { color: var(--text); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 0;
+  margin-top: 40px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text2);
+  letter-spacing: 1px;
+}
+.footer-links { display: flex; gap: 24px; justify-content: center; margin-top: 8px; }
+.footer-links a { color: var(--accent); text-decoration: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 36px; }
+}
+
+.loading { color: var(--text2); font-size: 11px; text-align: center; padding: 20px; }
+.empty { color: var(--text2); font-size: 11px; text-align: center; padding: 40px; }
+
+/* Scan animation */
+@keyframes scan-line {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+.scanning-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.scanning-overlay::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: rgba(0,255,136,0.5);
+  animation: scan-line 2s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-mark">OE</div>
+        <div class="logo-text">OWS<span>Exchange</span></div>
+      </div>
+      <div class="header-meta">
+        <span><span class="live-dot"></span>LIVE</span>
+        <span class="ows-badge">OWS v1.2.0</span>
+        <span id="clock">--:--:--</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <h1>Autonomous<br><span class="green">Prediction</span> <span class="red">Market</span><br>Trading Agent</h1>
+    <p class="hero-sub">POWERED BY OPEN WALLET STANDARD · POLICY-GATED SIGNING · ZERO KEY EXPOSURE</p>
+    <div class="wallet-card">
+      <div>
+        <div class="wallet-label">OWS AGENT WALLET</div>
+        <div class="wallet-addr" id="wallet-addr">Loading...</div>
+      </div>
+      <div style="width:1px;height:32px;background:var(--border)"></div>
+      <div>
+        <div class="wallet-label">CHAIN</div>
+        <div class="wallet-addr">Ethereum · eip155:1</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">TOTAL P&L</div>
+      <div class="stat-value" id="stat-pnl">$0.00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">TRADES EXECUTED</div>
+      <div class="stat-value white" id="stat-trades">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">MARKETS SCANNED</div>
+      <div class="stat-value blue" id="stat-scans">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">OPPORTUNITIES</div>
+      <div class="stat-value" id="stat-opps">0</div>
+    </div>
+  </div>
+
+  <div class="bot-control">
+    <button class="btn btn-start" onclick="startBot()">▶ START BOT</button>
+    <button class="btn btn-stop" onclick="stopBot()">■ STOP</button>
+    <button class="btn btn-scan" onclick="scanMarkets()">⟳ SCAN NOW</button>
+    <div class="bot-status">
+      <span class="live-dot" id="bot-dot" style="background:var(--text2)"></span>
+      <span id="bot-status-text">IDLE</span>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-title">// ARBITRAGE OPPORTUNITIES</div>
+      <div class="opp-list" id="opp-list">
+        <div class="loading">Scanning markets...</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">// TRADE LOG</div>
+      <div class="trades-list" id="trades-list">
+        <div class="empty">Bot not running. Start to begin trading.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-full">
+    <div class="panel-title">// OWS SIGNING PROOF</div>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:16px;">Every trade is signed by the OWS agent wallet. Private keys never exposed to the agent process.</p>
+    <button class="btn btn-scan" onclick="demoSign()" style="margin-bottom:16px;">⚡ DEMO OWS SIGN</button>
+    <div class="ows-proof" id="ows-proof">
+      <div class="ows-proof-title">// AWAITING SIGNATURE</div>
+      <div class="ows-proof-data">Click "DEMO OWS SIGN" to generate a live cryptographic signature using the OWS agent wallet.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div>OWS EXCHANGE · BUILT FOR OWS HACKATHON 2026 · THE EXCHANGE TRACK</div>
+    <div class="footer-links">
+      <a href="https://openwallet.sh">openwallet.sh</a>
+      <a href="https://github.com/open-wallet-standard/core">GitHub</a>
+      <a href="https://hackathon.openwallet.sh">Hackathon</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const API = '';
+
+// Clock
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+// Load wallet
+async function loadWallet() {
+  try {
+    const r = await fetch(API + '/api/wallet');
+    const d = await r.json();
+    document.getElementById('wallet-addr').textContent = d.address;
+  } catch(e) {}
+}
+
+// Scan markets & opportunities
+async function scanMarkets() {
+  document.getElementById('opp-list').innerHTML = '<div class="loading">Scanning Polymarket...</div>';
+  try {
+    const r = await fetch(API + '/api/opportunities');
+    const d = await r.json();
+    renderOpportunities(d.opportunities);
+    document.getElementById('stat-opps').textContent = d.opportunities.length;
+  } catch(e) {
+    document.getElementById('opp-list').innerHTML = '<div class="empty">Scan failed. Retrying...</div>';
+  }
+}
+
+function renderOpportunities(opps) {
+  const el = document.getElementById('opp-list');
+  if (!opps || opps.length === 0) {
+    el.innerHTML = '<div class="empty">No arbitrage opportunities found.</div>';
+    return;
+  }
+  el.innerHTML = opps.map(o => `
+    <div class="opp-item">
+      <div class="opp-market">${o.market}</div>
+      <div class="opp-meta">
+        <span class="opp-edge">EDGE: ${o.edge}%</span>
+        <span class="opp-price">YES: ${(o.yes_price*100).toFixed(1)}¢</span>
+        <span class="opp-price">NO: ${(o.no_price*100).toFixed(1)}¢</span>
+        <span class="opp-price">VOL: $${(o.volume/1000).toFixed(0)}k</span>
+      </div>
+      <div class="opp-rec">${o.recommendation} · EST. ${o.profit_estimate}</div>
+    </div>
+  `).join('');
+}
+
+// Bot control
+async function startBot() {
+  await fetch(API + '/api/bot/start', { method: 'POST' });
+  document.getElementById('bot-dot').style.background = 'var(--accent)';
+  document.getElementById('bot-status-text').textContent = 'RUNNING';
+}
+
+async function stopBot() {
+  await fetch(API + '/api/bot/stop', { method: 'POST' });
+  document.getElementById('bot-dot').style.background = 'var(--accent2)';
+  document.getElementById('bot-status-text').textContent = 'STOPPED';
+}
+
+// Poll bot status
+async function pollStatus() {
+  try {
+    const r = await fetch(API + '/api/bot/status');
+    const d = await r.json();
+    
+    const pnl = d.totalPnl.toFixed(2);
+    const pnlEl = document.getElementById('stat-pnl');
+    pnlEl.textContent = (d.totalPnl >= 0 ? '+$' : '-$') + Math.abs(pnl);
+    pnlEl.className = 'stat-value' + (d.totalPnl >= 0 ? '' : ' red');
+    
+    document.getElementById('stat-trades').textContent = d.trades.length;
+    document.getElementById('stat-scans').textContent = d.scanCount;
+    
+    if (d.running) {
+      document.getElementById('bot-dot').style.background = 'var(--accent)';
+      document.getElementById('bot-status-text').textContent = 'RUNNING · LAST: ' + (d.lastScan ? new Date(d.lastScan).toLocaleTimeString() : '--');
+    }
+    
+    if (d.trades.length > 0) {
+      const tradesEl = document.getElementById('trades-list');
+      tradesEl.innerHTML = d.trades.map(t => `
+        <div class="trade-item">
+          <span class="trade-time">${new Date(t.time).toLocaleTimeString()}</span>
+          <span class="trade-market">${t.market}</span>
+          <span class="${t.pnl >= 0 ? 'trade-pnl-pos' : 'trade-pnl-neg'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl}</span>
+          <span class="trade-status">EXECUTED</span>
+        </div>
+      `).join('');
+    }
+  } catch(e) {}
+}
+
+// OWS demo sign
+async function demoSign() {
+  document.getElementById('ows-proof').innerHTML = `
+    <div class="ows-proof-title">// SIGNING...</div>
+    <div class="ows-proof-data">Requesting signature from OWS agent wallet...</div>
+  `;
+  try {
+    const r = await fetch(API + '/api/sign-demo');
+    const d = await r.json();
+    document.getElementById('ows-proof').innerHTML = `
+      <div class="ows-proof-title">// SIGNATURE GENERATED · OWS AGENT</div>
+      <div class="ows-proof-data">
+        <div><span style="color:var(--text2)">MESSAGE:</span> <span>${d.message}</span></div>
+        <div><span style="color:var(--text2)">WALLET:</span> <span>${d.wallet}</span></div>
+        <div><span style="color:var(--text2)">RESULT:</span> <span style="color:var(--accent)">${d.result || 'Signed successfully'}</span></div>
+        <div style="margin-top:8px;font-size:9px;color:var(--text2)">✓ Private key was NEVER exposed to this process · Signed in isolated OWS memory · Key wiped after signing</div>
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('ows-proof').innerHTML = `<div class="ows-proof-data" style="color:var(--accent2)">Signing error: ${e.message}</div>`;
+  }
+}
+
+// Init
+loadWallet();
+scanMarkets();
+setInterval(pollStatus, 3000);
+setInterval(scanMarkets, 30000);
+</script>
+</body>
+</html>
