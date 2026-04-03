@@ -1,3 +1,15 @@
+## 🏆 OWS Hackathon 2026 — 3 Projects
+
+> This submission is part of a 3-project hackathon entry. All three use OWS wallet signing.
+
+| Project | Track | Live | GitHub |
+|---------|-------|------|--------|
+| **RiskScope** | Observatory · Pay-Per-Call | [riskscope.xyz](https://riskscope.xyz) | [dogiladeveloper/riskscope](https://github.com/dogiladeveloper/riskscope) |
+| **OWSExchange** (this repo) | Exchange · Agentic Commerce | [ows-exchange.xyz](https://ows-exchange.xyz) | [dogiladeveloper/ows-exchange](https://github.com/dogiladeveloper/ows-exchange) |
+| **OWSAgentWork** | Network · Multi-Agent | [owsagentwork.xyz](https://owsagentwork.xyz) | [dogiladeveloper/owsagentwork](https://github.com/dogiladeveloper/owsagentwork) |
+
+---
+
 # OWSExchange 🤖
 
 > Autonomous prediction market trading agent powered by the Open Wallet Standard
