@@ -170,3 +170,18 @@ $ ows sign message --wallet exchange-agent --chain evm \
 
 **Wallet:** exchange-agent | **Address:** 0x759cFb2014398D63886A90E721d09CdB7eD5B140  
 **Chain:** eip155:137 (Polygon) | **Key exposure:** None ✓
+
+---
+
+## 👨‍💻 About the Builder
+
+Built by **Doğan Sarı** — independent developer specializing in algorithmic trading systems, crypto bots, and blockchain infrastructure.
+
+| Platform | Handle |
+|----------|--------|
+| 🐦 Twitter/X | [@dogiladeveloper](https://twitter.com/dogiladeveloper) |
+| 💬 Telegram | [@dogiladeveloper](https://t.me/dogiladeveloper) |
+| 🎮 Discord | dogiladeveloper |
+| 🐙 GitHub | [dogiladeveloper](https://github.com/dogiladeveloper) |
+
+*Built end-to-end in one night for OWS Hackathon 2026.*
