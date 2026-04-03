@@ -1,52 +1,145 @@
-# OWS Exchange 🤖
+# OWSExchange 🤖
 
 > Autonomous prediction market trading agent powered by the Open Wallet Standard
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-ows--exchange.xyz-00ff88?style=for-the-badge)](https://ows-exchange.xyz)
+[![OWS](https://img.shields.io/badge/OWS-v1.2.0-00ff88?style=flat-square)](https://openwallet.sh)
+[![Polymarket](https://img.shields.io/badge/Data-Polymarket-0066ff?style=flat-square)](https://polymarket.com)
+[![Track](https://img.shields.io/badge/Track-The%20Exchange-ff3366?style=flat-square)](https://hackathon.openwallet.sh)
+
 **OWS Hackathon 2026 — The Exchange Track**
 
-[![Live Demo](https://img.shields.io/badge/Live-ows--exchange.xyz-00ff88?style=flat-square)](https://ows-exchange.xyz)
-[![OWS](https://img.shields.io/badge/Powered%20by-OWS%20v1.2.0-00ff88?style=flat-square)](https://openwallet.sh)
+---
 
-## What it does
+## 🎯 What It Does
 
-OWS Exchange is an autonomous trading agent that scans Polymarket prediction markets for arbitrage opportunities and executes trades using an OWS-secured wallet — private keys never exposed to the agent process.
+OWSExchange is an autonomous AI trading agent that monitors **150+ live Polymarket prediction markets**, detects pricing inefficiencies, and executes trades — all signed securely by an OWS-managed wallet. Private keys never touch the agent process.
 
-## How it works
+**[→ Live Demo: ows-exchange.xyz](https://ows-exchange.xyz)**
 
-1. Agent scans Polymarket CLOB for mispriced markets
-2. Detects arbitrage edges (YES + NO prices < 1.0)
-3. OWS policy engine evaluates the trade before signing
-4. Key decrypted in isolated memory, transaction signed, key wiped
-5. Signed transaction submitted on-chain
+---
 
-## Required Stack
+## 🏗 Architecture
 
-- ✅ OWS CLI v1.2.0
-- ✅ OWS wallet for execution and settlement
-- ✅ MoonPay agent skill integration
-- ✅ Polymarket CLOB as trading venue
-
-## Architecture
 ```
-Polymarket API → Arbitrage Detector → OWS Policy Engine → OWS Signer → On-chain
-                                            ↑
-                                    exchange-agent wallet
-                                    (keys never exposed)
+Polymarket Gamma API
+        │
+        ▼
+  Market Scanner
+  (150+ live markets)
+        │
+        ▼
+  Arbitrage Detector ──── Category Filter
+  (edge detection)        (Crypto/Sports/Politics...)
+        │
+        ▼
+  OWS Policy Engine ◄──── Spending Limits
+        │                  Chain Allowlist
+        ▼
+  OWS Signer (exchange-agent wallet)
+  ┌─────────────────────────────────┐
+  │  Key decrypted in memory        │
+  │  Transaction signed             │
+  │  Key wiped immediately          │
+  │  Signature returned             │
+  └─────────────────────────────────┘
+        │
+        ▼
+   On-chain Settlement
 ```
 
-## Quick Start
+---
+
+## ✨ Features
+
+- **150+ Live Markets** — Real-time data from Polymarket Gamma API
+- **Category Filters** — Crypto, Politics, Sports, Finance, Tech, Weather
+- **OWS Wallet Signing** — Every trade cryptographically signed, zero key exposure
+- **Live Trade Log** — Real-time P&L tracking with tx hashes
+- **Arbitrage Detection** — Automated edge identification across markets
+- **Mobile Responsive** — Works on any device
+
+---
+
+## 🔧 Required Stack
+
+| Component | Usage |
+|-----------|-------|
+| **OWS CLI v1.2.0** | Wallet management & signing |
+| **OWS Wallet** | `exchange-agent` — execution & settlement |
+| **MoonPay Agent Skill** | Payment integration |
+| **Polymarket Gamma API** | Live prediction market data |
+| **Node.js + Express** | Backend API server |
+
+---
+
+## 🚀 Quick Start
+
 ```bash
+# Install OWS
+npm install -g @open-wallet-standard/core
+
+# Create agent wallet
+ows wallet create --name exchange-agent
+
+# Install dependencies
 npm install
+
+# Start server
 node server.js
 ```
 
-## OWS Wallet
-```
-Wallet: exchange-agent
-Chain: eip155:1 (Ethereum)
-Address: 0x759cFb2014398D63886A90E721d09CdB7eD5B140
+Visit `http://localhost:3001`
+
+---
+
+## 🔐 OWS Integration
+
+```javascript
+// Agent never sees the private key
+const result = owsCmd('ows sign message --wallet exchange-agent --chain evm --message "Trade Signal"');
+// Returns cryptographic signature
+// Key wiped from memory after signing
 ```
 
-## Live Demo
+**Wallet:** `exchange-agent`  
+**Chain:** `eip155:1` (Ethereum)  
+**Address:** `0x759cFb2014398D63886A90E721d09CdB7eD5B140`
 
-Visit [ows-exchange.xyz](https://ows-exchange.xyz) to see the bot in action.
+---
+
+## 📊 How Trading Works
+
+1. **Scan** — Bot fetches 150+ active Polymarket markets every 8 seconds
+2. **Analyze** — Detects mispriced markets where YES + NO ≠ 1.00
+3. **Policy Check** — OWS policy engine validates trade against limits
+4. **Sign** — OWS wallet signs transaction in isolated memory
+5. **Execute** — Trade submitted, key wiped, signature logged
+
+---
+
+## 🏆 Hackathon
+
+Built for **OWS Hackathon 2026 — The Exchange Track**
+
+**Judged on:** Strategy quality, full execution loop from signal to settlement via OWS, real risk management.
+
+- [hackathon.openwallet.sh](https://hackathon.openwallet.sh)
+- [openwallet.sh](https://openwallet.sh)
+- [github.com/open-wallet-standard/core](https://github.com/open-wallet-standard/core)
+
+---
+
+## 📁 Project Structure
+
+```
+ows-exchange/
+├── server.js          # Express API + OWS integration
+├── public/
+│   └── index.html     # Trading dashboard UI
+└── package.json
+```
+
+---
+
+*Built with ❤️ using Open Wallet Standard v1.2.0*
