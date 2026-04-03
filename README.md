@@ -143,3 +143,18 @@ ows-exchange/
 ---
 
 *Built with ❤️ using Open Wallet Standard v1.2.0*
+
+---
+
+## Live OWS Signing Proof
+
+Every trade is cryptographically signed by the OWS exchange-agent wallet:
+```bash
+$ ows sign message --wallet exchange-agent --chain evm \
+    --message "OWSExchange: autonomous prediction market trading via OWS v1.2.0"
+
+9866fcb62b93cb62daff74f2e26ba5def576341d381bbd4ddbc7b944f4fb365e7663e1b2f59a119b41a45171c1f2bdc36d266a2759b476d5341f1f2bc3d3c8391b
+```
+
+**Wallet:** exchange-agent | **Address:** 0x759cFb2014398D63886A90E721d09CdB7eD5B140  
+**Chain:** eip155:137 (Polygon) | **Key exposure:** None ✓
