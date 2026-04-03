@@ -103,7 +103,7 @@ const result = owsCmd('ows sign message --wallet exchange-agent --chain evm --me
 ```
 
 **Wallet:** `exchange-agent`  
-**Chain:** `eip155:1` (Ethereum)  
+**Chain:** `eip155:137` (Polygon)  
 **Address:** `0x759cFb2014398D63886A90E721d09CdB7eD5B140`
 
 ---

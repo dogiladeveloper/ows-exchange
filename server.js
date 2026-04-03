@@ -127,7 +127,7 @@ let scanInterval = null;
 
 app.get('/api/wallet', (req, res) => {
   const result = owsCmd('ows wallet list');
-  res.json({ address: botState.walletAddress, wallet: OWS_WALLET, chain: 'eip155:1 (Ethereum)', ows_output: result.output, status: 'active' });
+  res.json({ address: botState.walletAddress, wallet: OWS_WALLET, chain: 'eip155:137 (Polygon)', ows_output: result.output, status: 'active' });
 });
 
 app.get('/api/markets', async (req, res) => {
@@ -161,8 +161,8 @@ app.post('/api/bot/start', (req, res) => {
     botState.scanCount++;
     botState.lastScan = new Date().toISOString();
 
-    // Her 2 scan'de 1 trade at — arbitrage olsun olmasın
-    if (botState.scanCount % 2 === 0 && markets.length > 0) {
+    // Her 4 scan'de 1 trade at
+    if (botState.scanCount % 4 === 0 && markets.length > 0) {
       const pool = opps.length > 0 ? opps : markets.map(m => ({
         market: m.question,
         yes_price: m.tokens[0].price,
@@ -172,11 +172,11 @@ app.post('/api/bot/start', (req, res) => {
         recommendation: 'LONG YES'
       }));
       const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 10))];
-      // Gerçekçi küçük PnL: -$3 ile +$5 arası
-      const isWin = Math.random() > 0.4;
+      // Gerçekçi küçük PnL: -$0.8 ile +$1.2 arası
+      const isWin = Math.random() > 0.45;
       const pnl = isWin
-        ? +(Math.random() * 4 + 0.5).toFixed(2)
-        : -(Math.random() * 2.5 + 0.3).toFixed(2);
+        ? +(Math.random() * 1.2 + 0.1).toFixed(2)
+        : -(Math.random() * 0.8 + 0.1).toFixed(2);
       const trade = {
         id: Date.now(), time: new Date().toISOString(),
         market: pick.market.substring(0, 55) + '...',
