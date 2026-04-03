@@ -357,19 +357,7 @@ footer {
 @media (max-width: 768px) {
   .stats-row { grid-template-columns: repeat(2, 1fr); }
   .main-grid { grid-template-columns: 1fr; }
-  .hero h1 { font-size: 32px; letter-spacing: -1px; }
-  .hero-sub { font-size: 9px; letter-spacing: 1px; }
-  .wallet-card { flex-direction: column; gap: 8px; text-align: center; }
-  .bot-control { flex-wrap: wrap; gap: 8px; }
-  .btn { padding: 10px 16px; font-size: 10px; }
-  .category-bar { gap: 4px; }
-  .cat-btn { padding: 6px 10px; font-size: 9px; }
-  .header-inner { flex-wrap: wrap; gap: 8px; }
-  .logo-text { font-size: 16px; }
-  .trade-item { grid-template-columns: 70px 1fr 50px; font-size: 9px; }
-  .panel { padding: 16px; }
-  .stat-value { font-size: 24px; }
-  .container { padding: 0 12px; }
+  .hero h1 { font-size: 36px; }
 }
 
 .loading { color: var(--text2); font-size: 11px; text-align: center; padding: 20px; }
@@ -415,7 +403,7 @@ footer {
 <div class="container">
   <div class="hero">
     <h1>Autonomous<br><span class="green">Prediction</span> <span class="red">Market</span><br>Trading Agent</h1>
-    <p class="hero-sub">POWERED BY OWS · TRADING ON <a href="https://polymarket.com" target="_blank" style="color:#00b4ff;text-decoration:none;border-bottom:1px solid #00b4ff">POLYMARKET</a> · POLICY-GATED SIGNING · ZERO KEY EXPOSURE</p>
+    <p class="hero-sub">POWERED BY OPEN WALLET STANDARD · POLICY-GATED SIGNING · ZERO KEY EXPOSURE</p>
     <div class="wallet-card">
       <div>
         <div class="wallet-label">OWS AGENT WALLET</div>
@@ -471,7 +459,7 @@ footer {
 
   <div class="main-grid">
     <div class="panel">
-      <div class="panel-title">// ACTIVE MARKETS <span id="market-count" style="color:var(--accent);margin-left:8px"></span><a href="https://polymarket.com" target="_blank" style="margin-left:auto;font-size:9px;color:var(--text2);text-decoration:none;letter-spacing:1px;border:1px solid var(--border);padding:2px 8px;">POLYMARKET ↗</a></div>
+      <div class="panel-title">// ACTIVE MARKETS <span id="market-count" style="color:var(--accent);margin-left:8px"></span></div>
       <div class="opp-list" id="opp-list">
         <div class="loading">Loading markets...</div>
       </div>
@@ -509,32 +497,124 @@ footer {
 
 <script>
 const API = '';
+
+// Clock
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+// Load wallet
+async function loadWallet() {
+  try {
+    const r = await fetch(API + '/api/wallet');
+    const d = await r.json();
+    document.getElementById('wallet-addr').textContent = d.address;
+  } catch(e) {}
+}
+
+
+
+function renderOpportunities(opps) {
+  const el = document.getElementById('opp-list');
+  if (!opps || opps.length === 0) {
+    el.innerHTML = '<div class="empty">No arbitrage opportunities found.</div>';
+    return;
+  }
+  el.innerHTML = opps.map(o => `
+    <div class="opp-item">
+      <div class="opp-market">${o.market}</div>
+      <div class="opp-meta">
+        <span class="opp-edge">EDGE: ${o.edge}%</span>
+        <span class="opp-price">YES: ${(o.yes_price*100).toFixed(1)}¢</span>
+        <span class="opp-price">NO: ${(o.no_price*100).toFixed(1)}¢</span>
+        <span class="opp-price">VOL: $${(o.volume/1000).toFixed(0)}k</span>
+      </div>
+      <div class="opp-rec">${o.recommendation} · EST. ${o.profit_estimate}</div>
+    </div>
+  `).join('');
+}
+
+// Bot control
+async function startBot() {
+  await fetch(API + '/api/bot/start', { method: 'POST' });
+  document.getElementById('bot-dot').style.background = 'var(--accent)';
+  document.getElementById('bot-status-text').textContent = 'RUNNING';
+}
+
+async function stopBot() {
+  await fetch(API + '/api/bot/stop', { method: 'POST' });
+  document.getElementById('bot-dot').style.background = 'var(--accent2)';
+  document.getElementById('bot-status-text').textContent = 'STOPPED';
+}
+
+// Poll bot status
+async function pollStatus() {
+  try {
+    const r = await fetch(API + '/api/bot/status');
+    const d = await r.json();
+    
+    const pnl = d.totalPnl.toFixed(2);
+    const pnlEl = document.getElementById('stat-pnl');
+    pnlEl.textContent = (d.totalPnl >= 0 ? '+$' : '-$') + Math.abs(pnl);
+    pnlEl.className = 'stat-value' + (d.totalPnl >= 0 ? '' : ' red');
+    
+    document.getElementById('stat-trades').textContent = d.trades.length;
+    document.getElementById('stat-scans').textContent = d.scanCount;
+    
+    if (d.running) {
+      document.getElementById('bot-dot').style.background = 'var(--accent)';
+      document.getElementById('bot-status-text').textContent = 'RUNNING · LAST: ' + (d.lastScan ? new Date(d.lastScan).toLocaleTimeString() : '--');
+    }
+    
+    if (d.trades.length > 0) {
+      const tradesEl = document.getElementById('trades-list');
+      tradesEl.innerHTML = d.trades.map(t => `
+        <div class="trade-item">
+          <span class="trade-time">${new Date(t.time).toLocaleTimeString()}</span>
+          <span class="trade-market">${t.market}</span>
+          <span class="${t.pnl >= 0 ? 'trade-pnl-pos' : 'trade-pnl-neg'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl}</span>
+          <span class="trade-status">EXECUTED</span>
+        </div>
+      `).join('');
+    }
+  } catch(e) {}
+}
+
+// OWS demo sign
+async function demoSign() {
+  document.getElementById('ows-proof').innerHTML = `
+    <div class="ows-proof-title">// SIGNING...</div>
+    <div class="ows-proof-data">Requesting signature from OWS agent wallet...</div>
+  `;
+  try {
+    const r = await fetch(API + '/api/sign-demo');
+    const d = await r.json();
+    document.getElementById('ows-proof').innerHTML = `
+      <div class="ows-proof-title">// SIGNATURE GENERATED · OWS AGENT</div>
+      <div class="ows-proof-data">
+        <div><span style="color:var(--text2)">MESSAGE:</span> <span>${d.message}</span></div>
+        <div><span style="color:var(--text2)">WALLET:</span> <span>${d.wallet}</span></div>
+        <div><span style="color:var(--text2)">RESULT:</span> <span style="color:var(--accent)">${d.result || 'Signed successfully'}</span></div>
+        <div style="margin-top:8px;font-size:9px;color:var(--text2)">✓ Private key was NEVER exposed to this process · Signed in isolated OWS memory · Key wiped after signing</div>
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('ows-proof').innerHTML = `<div class="ows-proof-data" style="color:var(--accent2)">Signing error: ${e.message}</div>`;
+  }
+}
+
 let currentCategory = 'all';
 
 function setCategory(cat, el) {
   currentCategory = cat;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
+  el.classList.add('active');
   scanMarkets();
 }
 
-setInterval(() => {
-  const el = document.getElementById('clock');
-  if (el) el.textContent = new Date().toLocaleTimeString();
-}, 1000);
-
-async function loadWallet() {
-  try {
-    const r = await fetch(API + '/api/wallet');
-    const d = await r.json();
-    const el = document.getElementById('wallet-addr');
-    if (el) el.textContent = d.address;
-  } catch(e) {}
-}
-
+// Override scanMarkets to use category
 async function scanMarkets() {
-  const el = document.getElementById('opp-list');
-  if (el) el.innerHTML = '<div class="loading">Loading ' + currentCategory + ' markets...</div>';
+  document.getElementById('opp-list').innerHTML = '<div class="loading">Loading ' + currentCategory + ' markets...</div>';
   try {
     const [mktRes, oppRes] = await Promise.all([
       fetch(API + '/api/markets?category=' + currentCategory),
@@ -543,116 +623,44 @@ async function scanMarkets() {
     const mktData = await mktRes.json();
     const oppData = await oppRes.json();
     renderMarkets(mktData.markets, oppData.opportunities);
-    const oppEl = document.getElementById('stat-opps');
-    if (oppEl) oppEl.textContent = oppData.opportunities.length;
-    const cntEl = document.getElementById('market-count');
-    if (cntEl) cntEl.textContent = mktData.total + ' markets';
+    document.getElementById('stat-opps').textContent = oppData.opportunities.length;
+    document.getElementById('market-count').textContent = mktData.total + ' markets';
   } catch(e) {
-    if (el) el.innerHTML = '<div class="empty">Scan failed.</div>';
+    document.getElementById('opp-list').innerHTML = '<div class="empty">Scan failed. Retrying...</div>';
   }
 }
 
 function renderMarkets(markets, opps) {
   const el = document.getElementById('opp-list');
   if (!markets || markets.length === 0) {
-    if (el) el.innerHTML = '<div class="empty">No markets found.</div>';
+    el.innerHTML = '<div class="empty">No markets found.</div>';
     return;
   }
-  const oppSet = new Set((opps || []).map(o => o.market));
-  let html = '';
-  markets.slice(0, 30).forEach(function(m) {
-    const hasArb = oppSet.has(m.question);
-    const yes = m.tokens ? m.tokens.find(function(t) { return t.outcome === 'Yes'; }) : null;
-    const no = m.tokens ? m.tokens.find(function(t) { return t.outcome === 'No'; }) : null;
-    const total = (yes && no) ? (yes.price + no.price).toFixed(3) : '1.000';
-    const edge = (yes && no) ? Math.abs(1 - (yes.price + no.price)) : 0;
-    const yesP = yes ? (yes.price * 100).toFixed(1) : '?';
-    const noP = no ? (no.price * 100).toFixed(1) : '?';
-    const vol = (m.volume / 1000).toFixed(0);
-    const edgeStr = hasArb ? ('<div class="opp-rec">ARBITRAGE DETECTED · EDGE: ' + (edge*100).toFixed(2) + '%</div>') : '';
-    const borderStyle = hasArb ? 'border-left-color:var(--accent2)' : '';
-    html += '<div class="opp-item" style="' + borderStyle + '">';
-    html += '<div class="opp-market">' + m.question + '</div>';
-    html += '<div class="opp-meta">';
-    html += '<span class="opp-price">YES: ' + yesP + '¢</span>';
-    html += '<span class="opp-price">NO: ' + noP + '¢</span>';
-    html += '<span class="opp-price">VOL: $' + vol + 'k</span>';
-    html += '<span class="' + (edge > 0.02 ? 'opp-edge' : 'opp-price') + '">TOTAL: ' + total + '</span>';
-    html += '</div>' + edgeStr + '</div>';
-  });
-  if (el) el.innerHTML = html;
+  const oppIds = new Set(opps.map(o => o.market));
+  el.innerHTML = markets.slice(0, 30).map(m => {
+    const hasArb = oppIds.has(m.question);
+    const yes = m.tokens.find(t => t.outcome === 'Yes');
+    const no = m.tokens.find(t => t.outcome === 'No');
+    const total = yes && no ? (yes.price + no.price).toFixed(3) : '1.000';
+    const edge = yes && no ? Math.abs(1 - (yes.price + no.price)) : 0;
+    return \`<div class="opp-item" style="\${hasArb ? 'border-left-color:var(--accent2)' : ''}">
+      <div class="opp-market">\${m.question}</div>
+      <div class="opp-meta">
+        <span class="opp-price">YES: \${yes ? (yes.price*100).toFixed(1) : '?'}¢</span>
+        <span class="opp-price">NO: \${no ? (no.price*100).toFixed(1) : '?'}¢</span>
+        <span class="opp-price">VOL: $\${(m.volume/1000).toFixed(0)}k</span>
+        <span class="\${edge > 0.02 ? 'opp-edge' : 'opp-price'}">TOTAL: \${total}</span>
+      </div>
+      \${hasArb ? '<div class="opp-rec">⚡ ARBITRAGE DETECTED · EDGE: ' + (edge*100).toFixed(2) + '%</div>' : ''}
+    </div>\`;
+  }).join('');
 }
 
-async function startBot() {
-  await fetch(API + '/api/bot/start', { method: 'POST' });
-  const dot = document.getElementById('bot-dot');
-  const txt = document.getElementById('bot-status-text');
-  if (dot) dot.style.background = 'var(--accent)';
-  if (txt) txt.textContent = 'RUNNING';
-}
-
-async function stopBot() {
-  await fetch(API + '/api/bot/stop', { method: 'POST' });
-  const dot = document.getElementById('bot-dot');
-  const txt = document.getElementById('bot-status-text');
-  if (dot) dot.style.background = 'var(--accent2)';
-  if (txt) txt.textContent = 'STOPPED';
-}
-
-async function pollStatus() {
-  try {
-    const r = await fetch(API + '/api/bot/status');
-    const d = await r.json();
-    const pnl = parseFloat(d.totalPnl).toFixed(2);
-    const pnlEl = document.getElementById('stat-pnl');
-    if (pnlEl) {
-      pnlEl.textContent = (d.totalPnl >= 0 ? '+$' : '-$') + Math.abs(pnl);
-      pnlEl.className = 'stat-value' + (d.totalPnl >= 0 ? '' : ' red');
-    }
-    const tEl = document.getElementById('stat-trades');
-    if (tEl) tEl.textContent = d.trades.length;
-    const sEl = document.getElementById('stat-scans');
-    if (sEl) sEl.textContent = d.scanCount;
-    if (d.running) {
-      const dot = document.getElementById('bot-dot');
-      const txt = document.getElementById('bot-status-text');
-      if (dot) dot.style.background = 'var(--accent)';
-      if (txt) txt.textContent = 'RUNNING · LAST: ' + (d.lastScan ? new Date(d.lastScan).toLocaleTimeString() : '--');
-    }
-    if (d.trades && d.trades.length > 0) {
-      const tradesEl = document.getElementById('trades-list');
-      if (tradesEl) {
-        let tHtml = '';
-        d.trades.forEach(function(t) {
-          const pnlClass = t.pnl >= 0 ? 'trade-pnl-pos' : 'trade-pnl-neg';
-          const pnlStr = (t.pnl >= 0 ? '+' : '') + '$' + t.pnl;
-          tHtml += '<div class="trade-item">';
-          tHtml += '<span class="trade-time">' + new Date(t.time).toLocaleTimeString() + '</span>';
-          tHtml += '<span class="trade-market">' + t.market + '</span>';
-          tHtml += '<span class="' + pnlClass + '">' + pnlStr + '</span>';
-          tHtml += '<span class="trade-status">EXECUTED</span>';
-          tHtml += '</div>';
-        });
-        tradesEl.innerHTML = tHtml;
-      }
-    }
-  } catch(e) {}
-}
-
-async function demoSign() {
-  const el = document.getElementById('ows-proof');
-  if (el) el.innerHTML = '<div class="ows-proof-title">// SIGNING...</div><div class="ows-proof-data">Requesting signature...</div>';
-  try {
-    const r = await fetch(API + '/api/sign-demo');
-    const d = await r.json();
-    if (el) el.innerHTML = '<div class="ows-proof-title">// SIGNATURE GENERATED</div><div class="ows-proof-data"><div>MESSAGE: <span>' + d.message + '</span></div><div>WALLET: <span>' + d.wallet + '</span></div><div>SIG: <span style="color:var(--accent)">' + (d.result || 'Signed').substring(0,40) + '...</span></div><div style="margin-top:8px;font-size:9px;color:var(--text2)">Key wiped after signing · OWS v1.2.0</div></div>';
-  } catch(e) {}
-}
-
+// Init
 loadWallet();
 scanMarkets();
 setInterval(pollStatus, 3000);
-setInterval(scanMarkets, 60000);
+setInterval(scanMarkets, 30000);
 </script>
 </body>
 </html>
